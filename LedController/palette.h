@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 
-#define p(...) Serial.print(__VA_ARGS__)
+#define p(...) //Serial.print(__VA_ARGS__)
 
 #include "FastLED.h"
 
@@ -13,8 +13,8 @@ class Palette {
 public:
   Palette(int palIndex, int palSize) : m_palIndex(palIndex), m_palSize(palSize) {}
   
-  CRGB getColor(int colIndex);
-  CRGB getColor(int palIndex2, int colIndex) { return 0; }
+  CRGB getColor(uint32_t colIndex);
+  CRGB getColor(int palIndex2, uint32_t colIndex) { return 0; }
 
 private:
   int m_palIndex;

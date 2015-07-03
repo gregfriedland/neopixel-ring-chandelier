@@ -3,12 +3,13 @@
 #include <inttypes.h>
 
 #include "palette.h"
+#include "gamma.h"
 
 uint32_t colorLookup(int index) {
   return pgm_read_dword(colorTable + index);
 }
 
-void colorToRgb(int col, uint8_t& r, uint8_t& g, uint8_t& b) {
+void colorToRgb(uint32_t col, uint8_t& r, uint8_t& g, uint8_t& b) {
   r = (col >> 16) & 255;
   g = (col >> 8) & 255;
   b = col & 255;
@@ -19,13 +20,13 @@ uint16_t interp16(uint16_t start, uint16_t end, uint16_t index, uint16_t length)
   return start + index*((int32_t)end-start)/length;
 }
 
-void getGradientColor(int palIndex, int gradientIndex, int gradientSize, uint8_t& r, uint8_t& g, uint8_t& b) {
+void getGradientColor(int palIndex, uint32_t gradientIndex, int gradientSize, uint8_t& r, uint8_t& g, uint8_t& b) {
   gradientIndex = (gradientIndex + gradientSize) % gradientSize;    
 
-  int subGradientSize = gradientSize / NUM_COLORS_PER_PALETTE;
+  int subGradientSize = gradientSize / (NUM_COLORS_PER_PALETTE - 1);
 
   int colIndex1 = gradientIndex / subGradientSize;
-  int colIndex2 = (colIndex1 + 1) % NUM_COLORS_PER_PALETTE;
+  int colIndex2 = (colIndex1 + 1) % (NUM_COLORS_PER_PALETTE - 1);
   
   uint8_t r1, g1, b1, r2, g2, b2;
   colorToRgb(colorLookup(palIndex * NUM_COLORS_PER_PALETTE + colIndex1), r1, g1, b1);
@@ -48,8 +49,12 @@ void getGradientColor(int palIndex, int gradientIndex, int gradientSize, uint8_t
 }
 
 
-CRGB Palette::getColor(int colIndex) {
+static uint16_t ditherCycle = 0;
+
+CRGB Palette::getColor(uint32_t colIndex) {
   uint8_t r, g, b;
   getGradientColor(m_palIndex, colIndex, m_palSize, r, g, b);
-  return CRGB(r, g, b);
+  CRGB col = CRGB(gamma(r, ditherCycle), gamma(g, ditherCycle), gamma(b, ditherCycle));
+  ditherCycle++;
+  return col;
 }

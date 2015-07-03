@@ -22,18 +22,21 @@ CRGB leds[NUM_LEDS];
 //uint32_t lastPaletteChangeTime = millis();
 
 //PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, particleSize
-Pattern gradient(leds, Palette(1, PALETTE_SIZE), PatternSettings(NUM_LEDS, 1<<11, 1<<12, 1<<4, 1<<3, 25, 0, 0, 0));
+Pattern gradient(leds, Palette(2, PALETTE_SIZE), PatternSettings(NUM_LEDS, 100, MAX_SPEED, 100, MAX_ACCELERATION/10, 
+	PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 0));
 
 void setup() {
   Wire.begin(4);                // join i2c bus with address #4
   Wire.onReceive(receiveEvent); // register event
-  Serial.begin(38400);           // start serial for output
+  Serial.begin(115200);           // start serial for output
   
   pinMode(13, OUTPUT);
 
   delay(2000);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   FastLED.setBrightness(32);
+  FastLED.setCorrection(TypicalSMD5050);
+
   Serial.println("Setup");
 }
 
@@ -52,6 +55,19 @@ void receiveEvent(int howMany)
     digitalWrite(13, HIGH);
     delay(10);
     digitalWrite(13, LOW);
+  }
+}
+
+void outputFPS(int updatePeriod) {
+  static uint32_t lastFPSCalcTime = millis();
+  static int frameCounter = 0;
+
+  frameCounter++;
+  if (millis() - lastFPSCalcTime > updatePeriod) {
+    Serial.print(frameCounter * 1000UL / (millis() - lastFPSCalcTime));
+    Serial.println(" fps");
+    lastFPSCalcTime = millis();
+    frameCounter = 0;
   }
 }
 
@@ -76,4 +92,6 @@ void loop() {
 //    gradient.setPalette(Palette(rand() % NUM_PALETTES, PALETTE_SIZE));
 //    lastPaletteChangeTime = millis();
 //  }
+
+  outputFPS(5000);
 }

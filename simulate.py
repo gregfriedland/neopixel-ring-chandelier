@@ -1,9 +1,12 @@
-import sys, pygame, time
+import sys, pygame, time, random
 clock = pygame.time.Clock()
 
 NUM_LEDS = 60
 PALETTE_SIZE = 1024
-MAX_POSSIBLE_SPEED = 1<<16
+MAX_POSSIBLE_SPEED = 5000
+MAX_ACCELERATION = 256
+FPS = 200
+POS_PRECISION = 200
 
 colorTable = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0x00FFFF, 0xFF0000,
               0x690011, 0xBF0426, 0xCC2738, 0xF2D99C, 0xE5B96F, 0x690011,
@@ -43,14 +46,14 @@ def getGradientColor(palIndex, gradientIndex, gradientSize):
 
     subGradientIndex = gradientIndex % subGradientSize
 
-    print "gradInd=%d subGradInd=%d colInd1/2=%d/%d" % (gradientIndex, subGradientIndex, colIndex1, colIndex2)
-    print "gradSize=%d subGradSize=%d" % (gradientSize, subGradientSize)
+    #print "gradInd=%d subGradInd=%d colInd1/2=%d/%d" % (gradientIndex, subGradientIndex, colIndex1, colIndex2)
+    #print "gradSize=%d subGradSize=%d" % (gradientSize, subGradientSize)
 
     rgb = [0,0,0]
     rgb[0] = interp16(rgb1[0], rgb2[0], subGradientIndex, subGradientSize)
     rgb[1] = interp16(rgb1[1], rgb2[1], subGradientIndex, subGradientSize)
     rgb[2] = interp16(rgb1[2], rgb2[2], subGradientIndex, subGradientSize)
-    print "rgb1=%s rgb2=%s rgb=%s" % (rgb1, rgb2, rgb)
+    #print "rgb1=%s rgb2=%s rgb=%s" % (rgb1, rgb2, rgb)
 
     return rgb
 
@@ -70,24 +73,25 @@ class PatternSettings:
 
 class PatternState:
     def __init__(self, settings):
-        self.settings, self.currLed, self.currColorIndex, self.currSpeed, self.currAcceleration = settings, 0, 0, settings.initSpeed, settings.acceleration
+        self.settings, self.pos, self.currColorIndex, self.currSpeed, self.currAcceleration = settings, 0, 0, settings.initSpeed, settings.acceleration
         
     def direction(self):
         return 1 if self.currSpeed >= 0  else -1
   
-    def currDelay(self):
-        delay = map(abs(self.currSpeed), 0, MAX_POSSIBLE_SPEED, 1000, 1)
-        print "speed=%d delay=%d" % (self.currSpeed, delay)
-        return delay
+    # def currDelay(self):
+    #     delay = map(abs(self.currSpeed), 0, MAX_POSSIBLE_SPEED, 100, 1)
+    #     print "speed=%4d delay=%4d" % (self.currSpeed, delay)
+    #     delay = min(max(delay, 1), 1000)
+    #     return delay
   
     def update(self):
-        newSpeed = self.currSpeed + self.currAcceleration * self.currDelay()
-        if newSpeed > self.settings.maxSpeed or newSpeed < self.settings.minSpeed:
-            self.currAcceleration *= -1
-            newSpeed = self.currSpeed + self.currAcceleration * self.currDelay()
+        accelDirection = 1 if random.random() > 0.5 else -1
+        newSpeed = self.currSpeed * (MAX_ACCELERATION + accelDirection * self.currAcceleration) / 256
+        newSpeed = max(min(newSpeed, self.settings.maxSpeed), self.settings.minSpeed)
           
         self.currSpeed = newSpeed
         self.currColorIndex += self.settings.colIncrement
+        print "currSpeed=%4d currAccel=%4d colIndex=%5d" % (self.currSpeed, self.currAcceleration, self.currColorIndex)
 
 
 class Pattern:
@@ -101,13 +105,13 @@ class Pattern:
         waveSize = self.state.settings.groupSize
 
         for i in range(self.state.settings.numLeds):
-            colIndex = (self.state.currLed + self.state.direction() * i) * self.state.settings.colIncrement
+            colIndex = (self.state.pos / POS_PRECISION + self.state.direction() * i) * self.state.settings.colIncrement
             col = self.palette.getColor(colIndex)
-            print "i=%d colIndex=%d col=%s" % (i, colIndex, col)
+            #if i == 0: print "i=%d currLed=%d colIndex=%d col=%s" % (i, self.state.currLed, colIndex, col)
             self.leds[i] = col
     
         if isWave:
-            waveIndex = self.state.currLed + i
+            waveIndex = self.state.pos / POS_PRECISION + i
             if waveIndex >= waveSize and singleWave:
                 waveVal = 0
             else:
@@ -119,23 +123,24 @@ class Pattern:
   
         # FIX: make sure we wrap around smoothly?
         fastLED.show(self.leds)
-        currDelay = self.state.currDelay()
-        fastLED.delay(currDelay)
+        # currDelay = self.state.currDelay()
+        fastLED.delay(1000/FPS)
         self.state.update()
-        self.state.currLed = (self.state.currLed + 1) % self.state.settings.numLeds
+        self.state.pos += self.state.currSpeed
 
 class FastLED:
     def __init__(self):
         pygame.init()
         pygame.display.init()
-        self.size = (640,480)
+        self.size = (1000,480)
         self.screen = pygame.display.set_mode(self.size)
+        self.ledSize = self.size[0] / NUM_LEDS * 3 / 4
 
     def show(self, leds):
         self.screen.fill((0,0,0))
         pygame.draw.circle(self.screen, (50,0,0), (self.size[0]/2,self.size[1]/2), 200, 0)
         for i, col in enumerate(leds):
-            pygame.draw.circle(self.screen, col, (i*20,100), 25, 0)
+            pygame.draw.circle(self.screen, col, (i*self.size[0] / NUM_LEDS ,self.size[1]/2), self.ledSize/2, 0)
         pygame.display.flip()
         
     def delay(self, delayMs):
@@ -145,7 +150,7 @@ class FastLED:
 fastLED = FastLED()
 
 if __name__ == "__main__":
-    gradient = Pattern([0]*NUM_LEDS, Palette(2, PALETTE_SIZE), PatternSettings(NUM_LEDS, 1<<11, 1<<12, 1<<4, 1<<3, 25, 0, 0, 0))
+    gradient = Pattern([0]*NUM_LEDS, Palette(2, PALETTE_SIZE), PatternSettings(NUM_LEDS, 250, 5000, 250, 25, PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 0))
     while True:
         gradient.gradient()
 

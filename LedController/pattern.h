@@ -4,7 +4,11 @@
 #include "palette.h"
 #include "FastLED.h"
 
-#define MAX_POSSIBLE_SPEED 1<<12
+#define PROB_MAX 256
+#define MAX_SPEED 1500
+#define MAX_ACCELERATION 256
+#define FPS 200
+#define POS_PRECISION 200
 
 struct PatternSettings {
   uint8_t numLeds;
@@ -24,33 +28,29 @@ struct PatternSettings {
 
 class PatternState {
 public:
-  PatternState(const PatternSettings& settings) : m_settings(settings), m_currLed(0), m_currColorIndex(0),
+  PatternState(const PatternSettings& settings) : m_settings(settings), m_pos(0), m_currColorIndex(0),
     m_currSpeed(settings.initSpeed), m_currAcceleration(settings.acceleration) {}
   
   const PatternSettings& settings() { return m_settings; }
-  int& currLed() { return m_currLed; }
-  int& currColorIndex() { return m_currColorIndex; }
+  uint32_t& pos() { return m_pos; }
+  int32_t& currSpeed() { return m_currSpeed; }      
+  uint32_t& currColorIndex() { return m_currColorIndex; }
   int direction() { return m_currSpeed >= 0 ? 1 : -1; }
   
-  int currDelay() {
-    p("sp="); p(m_currSpeed); p("\n");
-    return map(abs(m_currSpeed), 0, MAX_POSSIBLE_SPEED, 1000, 1);
-  }
-  
   void update() {
-    int64_t newSpeed = m_currSpeed + m_currAcceleration * currDelay();
-    if (newSpeed > m_settings.maxSpeed || newSpeed < m_settings.minSpeed) {
-      m_currAcceleration *= -1;
-      newSpeed = m_currSpeed + m_currAcceleration * currDelay();
-    }
+    int accelDirection = rand() % 2 == 0 ? 1 : -1;
+    int32_t newSpeed = m_currSpeed * (MAX_ACCELERATION + accelDirection * m_currAcceleration) / MAX_ACCELERATION;
+    newSpeed = max(min(newSpeed, m_settings.maxSpeed), m_settings.minSpeed);
+
     m_currSpeed = newSpeed;
     m_currColorIndex += m_settings.colIncrement;
+    p("sp="); p(m_currSpeed); p(" col="); p(m_currColorIndex); p("\n");	  
   }
   
 private:
   PatternSettings m_settings;
-  int m_currLed;
-  int m_currColorIndex;
+  uint32_t m_pos;
+  uint32_t m_currColorIndex;
   int32_t m_currSpeed;
   int32_t m_currAcceleration;
 };
