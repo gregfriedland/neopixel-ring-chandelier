@@ -22,7 +22,7 @@ void setup() {
 
   delay(2000);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
-  FastLED.setBrightness(32);
+  FastLED.setBrightness(64);
   FastLED.setCorrection(TypicalSMD5050);
 
   Serial.println("Setup");
@@ -35,7 +35,7 @@ void receiveEvent(int howMany)
   while(Wire.available() > 0)
   {
     byte code = Wire.read(); // receive byte as a character
-    Serial.println(code, HEX);        // print the character
+    Serial.print("Remote recv: "); Serial.println(code, HEX);
 
     if (code == IR_CMD_ENTER)
       gradient.setPalette(Palette(rand() % NUM_PALETTES, PALETTE_SIZE));

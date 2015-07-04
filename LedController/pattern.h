@@ -5,14 +5,6 @@
 #include "palette.h"
 #include "settings.h"
 
-typedef uint8_t ledind_t;
-typedef int16_t speed_t;
-typedef int8_t accel_t;
-typedef uint16_t colind_t;
-typedef uint8_t prob_t;
-typedef uint16_t event_t;
-typedef uint16_t pos_t;
-
 struct PatternSettings {
   ledind_t numLeds;
   speed_t initSpeed;

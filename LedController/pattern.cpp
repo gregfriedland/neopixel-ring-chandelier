@@ -59,7 +59,7 @@ void Pattern::gradient(bool isWave, bool singleWave) {
   FastLED.show();
   FastLED.delay(FRAME_DELAY);
   m_state.update();
-  m_state.pos() = (m_state.pos() + m_state.currSpeed()) % (POS_PRECISION * NUM_LEDS);
+  m_state.pos() = (m_state.pos() + m_state.currSpeed());// % (POS_PRECISION * NUM_LEDS * 2);
 }
 
 // show randomly appearing sparkles
