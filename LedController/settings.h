@@ -12,18 +12,27 @@ typedef uint32_t pos_t;
 typedef uint8_t col_t;
 
 #define PROB_MAX 256
-#define MAX_SPEED 3000
 #define MAX_ACCELERATION 256
 #define FPS 200
 #define POS_PRECISION 1000
 #define FRAME_DELAY (1000 / FPS)
 
 #define IR_CMD_UP 0x9A
-#define IR_CMD_LEFT 0x3B
-#define IR_CMD_DOWN 0x73
-#define IR_CMD_RIGHT 0x05
+#define IR_CMD_LEFT 0xA8
+#define IR_CMD_DOWN 0x35
+#define IR_CMD_RIGHT 0xEE
 #define IR_CMD_ENTER 0x24
 #define IR_CMD_EXIT 0xCD
+#define IR_CMD_0 0x8B
+#define IR_CMD_1 0xF7
+#define IR_CMD_2 0x7B
+#define IR_CMD_3 0xB1
+#define IR_CMD_4 0xD4
+#define IR_CMD_5 0x58
+#define IR_CMD_6 0x92
+#define IR_CMD_7 0x6A
+#define IR_CMD_8 0xE6
+#define IR_CMD_9 0x2C
 
 #define NUM_COLORS_PER_PALETTE 5  // # of base colors per palette
 #define GRADIENT_SIZE 256         // # of shades in gradient between each base color

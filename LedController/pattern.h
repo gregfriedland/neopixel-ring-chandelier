@@ -21,12 +21,13 @@ struct PatternSettings {
                   colIncrement(_colIncrement), eventProb(_eventProb), eventLength(_eventLength), groupSize(_groupSize) {}
 };
 
+
 class PatternState {
 public:
   PatternState(const PatternSettings& settings) : m_settings(settings), m_pos(0), m_currColorIndex(0),
     m_currSpeed(settings.initSpeed), m_currAcceleration(settings.acceleration) {}
   
-  const PatternSettings& settings() { return m_settings; }
+  PatternSettings& settings() { return m_settings; }
   pos_t& pos() { return m_pos; }
   speed_t& currSpeed() { return m_currSpeed; }      
   colind_t& currColorIndex() { return m_currColorIndex; }
@@ -41,6 +42,7 @@ private:
   accel_t m_currAcceleration;
 };
 
+
 class Pattern {
 public:
   Pattern(CRGB* leds, Palette palette, PatternSettings settings) 
@@ -49,6 +51,8 @@ public:
   void setPalette(Palette palette) {
     m_palette = palette;
   }
+
+  PatternState& state() { return m_state; }
 
   // show a spinning gradient that can change direction
   // uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb
@@ -74,6 +78,8 @@ public:
   // uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb, groupSize
   void pulse();
     
+  Palette& palette() { return m_palette; }
+  
 private:
   void gradient(bool isWave, bool singleWave);
 

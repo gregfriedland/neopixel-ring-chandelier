@@ -12,6 +12,7 @@ class Palette {
 public:
   Palette(int palIndex, int palSize);
   
+  palind_t index() { return m_palIndex; }
   CRGB getColor(colind_t colIndex);
   CRGB getColor(int palIndex2, colind_t colIndex) { return 0; }
 
