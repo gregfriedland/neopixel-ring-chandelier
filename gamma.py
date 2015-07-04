@@ -17,7 +17,7 @@
 fout=open("gamma.h","wt")
 
 #adjust me! Each extra bit doubles the table size 
-ditherBits=3
+ditherBits=2
 
 ditherMSB=1<<(ditherBits-1)
 

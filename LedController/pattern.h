@@ -1,28 +1,31 @@
 #ifndef PATTERNS_H
 #define PATTERNS_H
 
-#include "palette.h"
 #include "FastLED.h"
+#include "palette.h"
+#include "settings.h"
 
-#define PROB_MAX 256
-#define MAX_SPEED 1500
-#define MAX_ACCELERATION 256
-#define FPS 200
-#define POS_PRECISION 200
+typedef uint8_t ledind_t;
+typedef int16_t speed_t;
+typedef int8_t accel_t;
+typedef uint16_t colind_t;
+typedef uint8_t prob_t;
+typedef uint16_t event_t;
+typedef uint16_t pos_t;
 
 struct PatternSettings {
-  uint8_t numLeds;
-  int32_t initSpeed;
-  int32_t maxSpeed;
-  int32_t minSpeed;
-  int32_t acceleration;
-  uint16_t colIncrement;
-  uint8_t eventProb;
-  uint16_t eventLength;
-  uint8_t groupSize;
+  ledind_t numLeds;
+  speed_t initSpeed;
+  speed_t maxSpeed;
+  speed_t minSpeed;
+  accel_t acceleration;
+  colind_t colIncrement;
+  prob_t eventProb;
+  event_t eventLength;
+  ledind_t groupSize;
   
-  PatternSettings(int _numLeds, int _initSpeed, int _maxSpeed, int _minSpeed, int _acceleration, int _colIncrement, int _eventProb,
-                  int _eventLength, int _groupSize) : numLeds(_numLeds), initSpeed(_initSpeed), maxSpeed(_maxSpeed), minSpeed(_minSpeed), acceleration(_acceleration),
+  PatternSettings(ledind_t _numLeds, speed_t _initSpeed, speed_t _maxSpeed, speed_t _minSpeed, accel_t _acceleration, colind_t _colIncrement, prob_t _eventProb,
+                  event_t _eventLength, ledind_t _groupSize) : numLeds(_numLeds), initSpeed(_initSpeed), maxSpeed(_maxSpeed), minSpeed(_minSpeed), acceleration(_acceleration),
                   colIncrement(_colIncrement), eventProb(_eventProb), eventLength(_eventLength), groupSize(_groupSize) {}
 };
 
@@ -32,27 +35,18 @@ public:
     m_currSpeed(settings.initSpeed), m_currAcceleration(settings.acceleration) {}
   
   const PatternSettings& settings() { return m_settings; }
-  uint32_t& pos() { return m_pos; }
-  int32_t& currSpeed() { return m_currSpeed; }      
-  uint32_t& currColorIndex() { return m_currColorIndex; }
-  int direction() { return m_currSpeed >= 0 ? 1 : -1; }
+  pos_t& pos() { return m_pos; }
+  speed_t& currSpeed() { return m_currSpeed; }      
+  colind_t& currColorIndex() { return m_currColorIndex; }
   
-  void update() {
-    int accelDirection = rand() % 2 == 0 ? 1 : -1;
-    int32_t newSpeed = m_currSpeed * (MAX_ACCELERATION + accelDirection * m_currAcceleration) / MAX_ACCELERATION;
-    newSpeed = max(min(newSpeed, m_settings.maxSpeed), m_settings.minSpeed);
-
-    m_currSpeed = newSpeed;
-    m_currColorIndex += m_settings.colIncrement;
-    p("sp="); p(m_currSpeed); p(" col="); p(m_currColorIndex); p("\n");	  
-  }
+  void update();
   
 private:
   PatternSettings m_settings;
-  uint32_t m_pos;
-  uint32_t m_currColorIndex;
-  int32_t m_currSpeed;
-  int32_t m_currAcceleration;
+  pos_t m_pos;
+  colind_t m_currColorIndex;
+  speed_t m_currSpeed;
+  accel_t m_currAcceleration;
 };
 
 class Pattern {
@@ -78,7 +72,6 @@ public:
 
   // show randomly appearing sparkles
   // uses: initSpeed, colIncrement, eventProb, eventLength, groupSize
-  template<int NUM_LEDS>
   void sparkle();
 
   // randomly jitter back and forth around the circle

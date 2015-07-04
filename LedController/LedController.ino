@@ -1,22 +1,10 @@
-#include "pattern.h"
-#include "palette.h"
-
 #include "FastLED.h"
 #include <Wire.h>
 
-#define IR_CMD_UP 0x9A
-#define IR_CMD_LEFT 0x3B
-#define IR_CMD_DOWN 0x73
-#define IR_CMD_RIGHT 0x05
-#define IR_CMD_ENTER 0x24
-#define IR_CMD_EXIT 0xCD
+#include "settings.h"
+#include "pattern.h"
+#include "palette.h"
 
-#define PALETTE_SIZE 1024
-#define PALETTE_CHANGE_MS 10000
-#define NUM_PALETTES (sizeof(colorTable) / 6)
-
-#define NUM_LEDS 60
-#define DATA_PIN 10
 CRGB leds[NUM_LEDS];
 
 //uint32_t lastPaletteChangeTime = millis();
@@ -58,12 +46,12 @@ void receiveEvent(int howMany)
   }
 }
 
-void outputFPS(int updatePeriod) {
+void outputFPS() {
   static uint32_t lastFPSCalcTime = millis();
   static int frameCounter = 0;
 
   frameCounter++;
-  if (millis() - lastFPSCalcTime > updatePeriod) {
+  if (frameCounter > 500) {
     Serial.print(frameCounter * 1000UL / (millis() - lastFPSCalcTime));
     Serial.println(" fps");
     lastFPSCalcTime = millis();
@@ -93,5 +81,5 @@ void loop() {
 //    lastPaletteChangeTime = millis();
 //  }
 
-  outputFPS(5000);
+  outputFPS();
 }
