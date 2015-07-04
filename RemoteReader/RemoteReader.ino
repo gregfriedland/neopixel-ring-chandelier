@@ -3,7 +3,7 @@
 #include <IRremote.h>
 #include <Wire.h>
 
-int RECV_PIN = 10;
+int RECV_PIN = 9;
 
 IRrecv irrecv(RECV_PIN);
 
