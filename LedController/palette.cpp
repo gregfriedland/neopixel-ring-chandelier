@@ -12,40 +12,47 @@ uint32_t colorLookup(int index) {
 }
 
 #if USE_FASTLED_PALETTES == 0
-void colorToRgb(uint32_t col, uint8_t& r, uint8_t& g, uint8_t& b) {
-  r = (col >> 16) & 255;
-  g = (col >> 8) & 255;
-  b = col & 255;
-}
-
 uint16_t interp16(uint16_t start, uint16_t end, uint16_t index, uint16_t length) {
   if (index >= length) return end;
   return start + index*((int32_t)end-start)/length;
 }
 
-void getGradientColor(int palIndex, uint32_t gradientIndex, int gradientSize, uint8_t& r, uint8_t& g, uint8_t& b) {
-  gradientIndex = (gradientIndex + gradientSize) % gradientSize;    
+CRGB getGradientColor(palind_t palIndex, colind_t gradientIndex) {
+  gradientIndex = gradientIndex % PALETTE_SIZE;    
 
-  int subGradientSize = gradientSize / NUM_COLORS_PER_PALETTE;
-
-  int colIndex1 = gradientIndex / subGradientSize;
-  int colIndex2 = (colIndex1 + 1) % NUM_COLORS_PER_PALETTE;
+  uint8_t colIndex1 = gradientIndex / GRADIENT_SIZE;
+  uint8_t colIndex2 = (colIndex1 + 1) % PALETTE_SIZE_BLOCKS;
   
-  uint8_t r1, g1, b1, r2, g2, b2;
-  colorToRgb(colorLookup(palIndex * NUM_COLORS_PER_PALETTE + colIndex1), r1, g1, b1);
-  colorToRgb(colorLookup(palIndex * NUM_COLORS_PER_PALETTE + colIndex2), r2, g2, b2);
+  CRGB col1 = colorLookup(palIndex * PALETTE_SIZE_BLOCKS + colIndex1);
+  CRGB col2 = colorLookup(palIndex * PALETTE_SIZE_BLOCKS + colIndex2);
 
-  int subGradientIndex = gradientIndex % subGradientSize;
+  // p("gradInd="); p(gradientIndex); p(" subGradInd="); p(subGradientIndex); p(" colInd1/2="); p(colIndex1); p("/"); p(colIndex2); p("\n");
+  // p("gradSize="); p(gradientSize); p(" subGradSize="); p(subGradientSize); p("\n");
+  // p("rgb1="); p(r1); p(" "); p(g1); p(" "); p(b1); p(" ");
+  // p("rgb2="); p(r2); p(" "); p(g2); p(" "); p(b2); p("\n");
 
-  p("gradInd="); p(gradientIndex); p(" subGradInd="); p(subGradientIndex); p(" colInd1/2="); p(colIndex1); p("/"); p(colIndex2); p("\n");
-  p("gradSize="); p(gradientSize); p(" subGradSize="); p(subGradientSize); p("\n");
-  p("rgb1="); p(r1); p(" "); p(g1); p(" "); p(b1); p(" ");
-  p("rgb2="); p(r2); p(" "); p(g2); p(" "); p(b2); p("\n");
+#if 0
+  uint8_t f2 = gradientIndex % GRADIENT_SIZE;
+  uint8_t f1 = 256 - f2;
 
-  r = interp16(r1, r2, subGradientIndex, subGradientSize);
-  g = interp16(g1, g2, subGradientIndex, subGradientSize);
-  b = interp16(b1, b2, subGradientIndex, subGradientSize);
-  p("rgb="); p(r); p(" "); p(g); p(" "); p(b); p("\n");
+  uint8_t r1 = scale8_LEAVING_R1_DIRTY(col1.r, f1);
+  uint8_t g1 = scale8_LEAVING_R1_DIRTY(col1.g, f1);
+  uint8_t b1 = scale8_LEAVING_R1_DIRTY(col1.b, f1);
+  uint8_t r2 = scale8_LEAVING_R1_DIRTY(col2.r, f2);
+  uint8_t g2 = scale8_LEAVING_R1_DIRTY(col2.g, f2);
+  uint8_t b2 = scale8_LEAVING_R1_DIRTY(col2.b, f2);
+  cleanup_R1();
+
+  return CRGB(r1+r2, g1+g2, b1+b2);
+#else
+  uint8_t subGradientIndex = gradientIndex % GRADIENT_SIZE;  
+  col_t r = interp16(col1.r, col2.r, subGradientIndex, GRADIENT_SIZE);
+  col_t g = interp16(col1.g, col2.g, subGradientIndex, GRADIENT_SIZE);
+  col_t b = interp16(col1.b, col2.b, subGradientIndex, GRADIENT_SIZE);
+
+  return CRGB(r, g, b);
+#endif
+
 }
 #endif
 
@@ -76,9 +83,8 @@ CRGB Palette::getColor(colind_t colIndex) {
   ditherCycle++;
   return CRGB(gamma(rgb.r, ditherCycle), gamma(rgb.g, ditherCycle), gamma(rgb.b, ditherCycle));
 #else
-  uint8_t r, g, b;
-  getGradientColor(m_palIndex, colIndex, m_palSize, r, g, b);
-  CRGB col = CRGB(gamma(r, ditherCycle), gamma(g, ditherCycle), gamma(b, ditherCycle));
+  CRGB col = getGradientColor(m_palIndex, colIndex);
+  col = CRGB(gamma(col.r, ditherCycle), gamma(col.g, ditherCycle), gamma(col.b, ditherCycle));
   return col;
 #endif
 }

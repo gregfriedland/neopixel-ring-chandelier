@@ -224,6 +224,4 @@ const uint32_t PROGMEM colorTable[] =
 0xFFFBDC,0xBFBCA5,0x7F7D6E,0x3F3E37,0xE5E2C6,
 0x7D2A35,0xCC9258,0x917A56,0xB4BA6C,0xFEFFC2};
 
-#define NUM_PALETTES (sizeof(colorTable) / sizeof(colorTable[0]) / NUM_COLORS_PER_PALETTE)
-
 #endif

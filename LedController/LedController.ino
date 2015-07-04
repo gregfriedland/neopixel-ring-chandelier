@@ -10,7 +10,7 @@ CRGB leds[NUM_LEDS];
 //uint32_t lastPaletteChangeTime = millis();
 
 //PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, particleSize
-Pattern gradient(leds, Palette(2, PALETTE_SIZE), PatternSettings(NUM_LEDS, 100, MAX_SPEED, 100, MAX_ACCELERATION/10, 
+Pattern gradient(leds, Palette(2, PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/10, 
 	PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 0));
 
 void setup() {
@@ -56,6 +56,10 @@ void outputFPS() {
     Serial.println(" fps");
     lastFPSCalcTime = millis();
     frameCounter = 0;
+
+    digitalWrite(13, HIGH);
+    delay(10);
+    digitalWrite(13, LOW);    
   }
 }
 
