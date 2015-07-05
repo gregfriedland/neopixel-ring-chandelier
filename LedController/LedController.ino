@@ -9,13 +9,13 @@ CRGB leds[NUM_LEDS];
 
 //uint32_t lastPaletteChangeTime = millis();
 
-//PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, particleSize
-Pattern pattern(leds, Palette(2, PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/10, 
-	PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 0));
+//PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, groupSize
+Pattern pattern(leds, Palette(120, PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/10, 
+	PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 16));
 
 typedef enum { GRADIENT, WAVE, PARTICLE, NUM_MODES } PatternMode;
 
-PatternMode patternMode = GRADIENT;
+PatternMode patternMode = WAVE;
 
 
 void setup() {
@@ -47,12 +47,12 @@ void receiveEvent(int howMany)
       pattern.setPalette(Palette(rand() % NUM_PALETTES, PALETTE_SIZE));
       Serial.print("New palette: "); Serial.println(pattern.palette().index());
     } else if (code == IR_CMD_UP) {
-      pattern.state().settings().minSpeed *= 1.1;
-      pattern.state().settings().maxSpeed *= 1.1;
+      pattern.state().settings().minSpeed *= 1.2;
+      pattern.state().settings().maxSpeed *= 1.2;
       Serial.print("New max speed: "); Serial.println(pattern.state().settings().maxSpeed);
     } else if (code == IR_CMD_DOWN) {
-      pattern.state().settings().minSpeed *= 0.9;
-      pattern.state().settings().maxSpeed *= 0.9;
+      pattern.state().settings().minSpeed *= 0.8;
+      pattern.state().settings().maxSpeed *= 0.8;
       Serial.print("New max speed: "); Serial.println(pattern.state().settings().maxSpeed);
     } else if (code == IR_CMD_LEFT) {
       patternMode = (PatternMode) (((int)patternMode - 1 + NUM_MODES) % NUM_MODES);
@@ -77,7 +77,7 @@ void receiveEvent(int howMany)
     } else if (code == IR_CMD_7) {
       FastLED.setBrightness(128);
     } else if (code == IR_CMD_8) {
-      FastLED.setBrightness(256);
+      FastLED.setBrightness(255);
     }
     
     digitalWrite(13, HIGH);
