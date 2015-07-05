@@ -19,7 +19,7 @@ typedef uint8_t col_t;
 
 #define IR_CMD_UP 0x9A
 #define IR_CMD_LEFT 0xA8
-#define IR_CMD_DOWN 0x35
+#define IR_CMD_DOWN 0x07
 #define IR_CMD_RIGHT 0xEE
 #define IR_CMD_ENTER 0x24
 #define IR_CMD_EXIT 0xCD
@@ -40,6 +40,7 @@ typedef uint8_t col_t;
 #define PALETTE_SIZE (PALETTE_SIZE_BLOCKS*GRADIENT_SIZE) // # of colors per palette (must be multiple of 256)
 #define PALETTE_CHANGE_MS 10000
 #define NUM_PALETTES 201
+#define MIN_SATURATION 0
 
 #define NUM_LEDS 60
 #define DATA_PIN 10

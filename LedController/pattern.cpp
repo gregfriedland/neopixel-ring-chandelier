@@ -43,15 +43,21 @@ void Pattern::gradient(bool isWave, bool singleWave) {
     m_leds[i] = col;
     
    if (isWave) {
-     int16_t waveVal;
+     uint8_t waveVal;
      ledind_t waveIndex = m_state.pos() / POS_PRECISION + i;
+
+     if (singleWave)
+       waveIndex = waveIndex % NUM_LEDS;
+
      if (waveIndex >= waveSize && singleWave)
        waveVal = 0;
+     else if (waveIndex <= waveSize/2)
+       waveVal = 255 * waveIndex / (waveSize/2);
      else
-       waveVal = sin16((waveIndex % waveSize) * SINETABLE_MAX_IN / waveSize);
+       waveVal = 255 * (waveSize - waveIndex) / (waveSize/2);
 
      // scale intensity with number between 0-255
-     m_leds[i] %= waveVal * MAX_COLOR / SINETABLE_MAX_OUT;
+     m_leds[i] %= waveVal;
    }
   }
   
