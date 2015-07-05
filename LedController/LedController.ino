@@ -7,15 +7,13 @@
 
 CRGB leds[NUM_LEDS];
 
-//uint32_t lastPaletteChangeTime = millis();
-
 //PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, groupSize
-Pattern pattern(leds, Palette(120, PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/10, 
+Pattern pattern(leds, Palette(random16(NUM_PALETTES), PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/20, 
 	PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 16));
 
-typedef enum { GRADIENT, WAVE, PARTICLE, NUM_MODES } PatternMode;
+typedef enum { SPARKLE , GRADIENT, WAVE, PARTICLE, NUM_MODES } PatternMode;
 
-PatternMode patternMode = WAVE;
+PatternMode patternMode = PARTICLE;
 
 
 void setup() {
@@ -47,12 +45,12 @@ void receiveEvent(int howMany)
       pattern.setPalette(Palette(rand() % NUM_PALETTES, PALETTE_SIZE));
       Serial.print("New palette: "); Serial.println(pattern.palette().index());
     } else if (code == IR_CMD_UP) {
-      pattern.state().settings().minSpeed *= 1.2;
-      pattern.state().settings().maxSpeed *= 1.2;
+      pattern.state().settings().minSpeed = min(1.2 * pattern.state().settings().minSpeed, MAX_SPEED);
+      pattern.state().settings().maxSpeed = min(1.2 * pattern.state().settings().maxSpeed, MAX_SPEED);
       Serial.print("New max speed: "); Serial.println(pattern.state().settings().maxSpeed);
     } else if (code == IR_CMD_DOWN) {
-      pattern.state().settings().minSpeed *= 0.8;
-      pattern.state().settings().maxSpeed *= 0.8;
+      pattern.state().settings().minSpeed = max(0.8 * pattern.state().settings().minSpeed, MIN_SPEED);
+      pattern.state().settings().maxSpeed = max(0.8 * pattern.state().settings().maxSpeed, MIN_SPEED);
       Serial.print("New max speed: "); Serial.println(pattern.state().settings().maxSpeed);
     } else if (code == IR_CMD_LEFT) {
       patternMode = (PatternMode) (((int)patternMode - 1 + NUM_MODES) % NUM_MODES);
@@ -123,6 +121,9 @@ void loop() {
     case GRADIENT:
       pattern.gradient();
       break;
+    case SPARKLE:
+      pattern.sparkle();
+      break;
     case WAVE:
       pattern.wave();
       break;
@@ -131,12 +132,6 @@ void loop() {
       break;
   }
 
-    
-  // change the palette on a regular interval
-//  if (millis() - lastPaletteChangeTime > PALETTE_CHANGE_MS) {
-//    gradient.setPalette(Palette(rand() % NUM_PALETTES, PALETTE_SIZE));
-//    lastPaletteChangeTime = millis();
-//  }
 
   outputFPS();
 }

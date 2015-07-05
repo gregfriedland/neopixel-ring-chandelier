@@ -3,12 +3,12 @@
 
 typedef uint8_t palind_t;
 typedef uint8_t ledind_t;
-typedef int16_t speed_t;
-typedef int8_t accel_t;
-typedef uint16_t colind_t;
+typedef int32_t speed_t;
+typedef int32_t accel_t;
+typedef int32_t colind_t;
 typedef uint8_t prob_t;
 typedef uint16_t event_t;
-typedef uint32_t pos_t;
+typedef int32_t pos_t;
 typedef uint8_t col_t;
 
 #define PROB_MAX 256
@@ -16,6 +16,8 @@ typedef uint8_t col_t;
 #define FPS 200
 #define POS_PRECISION 1000
 #define FRAME_DELAY (1000 / FPS)
+#define MIN_SPEED 100
+#define MAX_SPEED 1e12
 
 #define IR_CMD_UP 0x9A
 #define IR_CMD_LEFT 0xA8
@@ -45,6 +47,6 @@ typedef uint8_t col_t;
 #define NUM_LEDS 60
 #define DATA_PIN 10
 
-#define p(...) //Serial.print(__VA_ARGS__)
+#define p(...) Serial.print(__VA_ARGS__)
 
 #endif

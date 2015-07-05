@@ -25,12 +25,13 @@ struct PatternSettings {
 class PatternState {
 public:
   PatternState(const PatternSettings& settings) : m_settings(settings), m_pos(0), m_currColorIndex(0),
-    m_currSpeed(settings.initSpeed), m_currAcceleration(settings.acceleration) {}
+    m_currSpeed(settings.initSpeed), m_currAcceleration(settings.acceleration), m_iter(random16()) {}
   
   PatternSettings& settings() { return m_settings; }
   pos_t& pos() { return m_pos; }
   speed_t& currSpeed() { return m_currSpeed; }      
   colind_t& currColorIndex() { return m_currColorIndex; }
+  uint32_t iter() { return m_iter; }
   
   void update();
   
@@ -40,6 +41,7 @@ private:
   colind_t m_currColorIndex;
   speed_t m_currSpeed;
   accel_t m_currAcceleration;
+  uint32_t m_iter;
 };
 
 
@@ -74,12 +76,10 @@ public:
   // uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb, groupSize
   void randomWalk();
 
-  // pulse the whole strip at a dynamic frequency
-  // uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb, groupSize
-  void pulse();
+  void noise();
     
   Palette& palette() { return m_palette; }
-  
+
 private:
   void gradient(bool isWave, bool singleWave);
 

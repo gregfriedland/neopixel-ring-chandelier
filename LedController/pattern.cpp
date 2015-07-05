@@ -1,16 +1,24 @@
 #include "pattern.h"
 
-#define SINETABLE_MAX_IN ((1<<16)-1)
-#define SINETABLE_MAX_OUT ((1<<15)-1)
+// #define SINETABLE_MAX_IN ((1<<16)-1)
+// #define SINETABLE_MAX_OUT ((1<<15)-1)
 #define MAX_COLOR 256
 
 void PatternState::update() {
-  accel_t accelDirection = rand() % 2 == 0 ? 1 : -1;
-  speed_t newSpeed = m_currSpeed * (MAX_ACCELERATION + accelDirection * m_currAcceleration) / MAX_ACCELERATION;
-  newSpeed = max(min(newSpeed, m_settings.maxSpeed), m_settings.minSpeed);
+#if 1
+  accel_t accel = (rand() % 2 == 0 ? 1 : -1) * m_currAcceleration;
+  speed_t newSpeed = m_currSpeed * (MAX_ACCELERATION + accel) / MAX_ACCELERATION;
+  newSpeed = max(min(newSpeed, m_settings.maxSpeed), -m_settings.maxSpeed);
+  if (newSpeed > -m_settings.minSpeed && newSpeed < m_settings.minSpeed)
+    newSpeed = newSpeed >= 0 ? -m_settings.minSpeed : m_settings.minSpeed;
+#else
+  // forward or backward
+  speed_t newSpeed = (inoise16(m_iter) - (1<<15)) / m_settings.maxSpeed; 
+#endif
 
   m_currSpeed = newSpeed;
   m_currColorIndex = (m_currColorIndex + m_settings.colIncrement) % PALETTE_SIZE;
+  m_iter++;
 //p("sp="); p(m_currSpeed); p(" col="); p(m_currColorIndex); p("\n");	  
 }
 
@@ -37,17 +45,18 @@ void Pattern::gradient(bool isWave, bool singleWave) {
   ledind_t waveSize = m_state.settings().groupSize;
 
   for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
-    colind_t colIndex = (m_state.pos() / POS_PRECISION + i) * m_state.settings().colIncrement;
+    pos_t pos = m_state.pos() / POS_PRECISION + i;
+    colind_t colIndex = pos * m_state.settings().colIncrement;
     CRGB col = m_palette.getColor(colIndex);
     //p("i="); p(i); p(" ci="); p(colIndex); p(" c="); p(col, HEX); p("\n");
     m_leds[i] = col;
     
    if (isWave) {
      uint8_t waveVal;
-     ledind_t waveIndex = m_state.pos() / POS_PRECISION + i;
+     ledind_t waveIndex = ((pos % NUM_LEDS) + NUM_LEDS) % NUM_LEDS; // handle neg numbers
 
-     if (singleWave)
-       waveIndex = waveIndex % NUM_LEDS;
+     // if (singleWave)
+     //   waveIndex = waveIndex % NUM_LEDS;
 
      if (waveIndex >= waveSize && singleWave)
        waveVal = 0;
@@ -65,8 +74,24 @@ void Pattern::gradient(bool isWave, bool singleWave) {
   FastLED.show();
   FastLED.delay(FRAME_DELAY);
   m_state.update();
-  m_state.pos() = (m_state.pos() + m_state.currSpeed());// % (POS_PRECISION * NUM_LEDS * 2);
+  m_state.pos() = m_state.pos() + m_state.currSpeed();
+  //p("speed="); p(m_state.currSpeed()); p(" pos="); p(m_state.pos()); p("\n");
 }
+
+// void Pattern::noise() {
+//   for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
+//     pos_t pos = inoise16(m_state.settings().maxSpeed * (m_state.iter() + i));
+//     colind_t colIndex = (m_state.pos() * m_state.settings().colIncrement);
+//     CRGB col = m_palette.getColor(colIndex);
+//     //p("i="); p(i); p(" ci="); p(colIndex); p(" c="); p(col, HEX); p("\n");
+//     m_leds[i] = col;
+//   }
+  
+//   // FIX: make sure we wrap around smoothly?
+//   FastLED.show();
+//   FastLED.delay(FRAME_DELAY);
+//   m_state.update();
+// }
 
 // show randomly appearing sparkles
 // uses: initSpeed, colIncrement, eventProb, eventLength, groupSize
@@ -113,44 +138,46 @@ void Pattern::sparkle() {
   m_state.update();
 }
 
-void Pattern::randomWalk() {
-  ledind_t groupSize = m_state.settings().groupSize;
-  for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
-    ledind_t ledIndex = m_state.pos() / POS_PRECISION + i;
-    m_leds[ledIndex % m_state.settings().numLeds] = m_palette.getColor(ledIndex * m_state.settings().colIncrement);
+// void Pattern::randomWalk() {
+//   gradient(true, true, true);
+// //   ledind_t groupSize = m_state.settings().groupSize;
+// //   for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
+// //     ledind_t ledIndex = m_state.pos() / POS_PRECISION + i;
+// //     colind_t colIndex = ledIndex * m_state.settings().colIncrement;
+// //     m_leds[ledIndex % m_state.settings().numLeds] = m_palette.getColor(colIndex);
       
-    int16_t val;
-    if (i >= groupSize)
-      val = 0;
-    else
-      val = sin16((i % groupSize) * SINETABLE_MAX_IN / groupSize);
+// //     int16_t val;
+// //     if (i >= groupSize)
+// //       val = 0;
+// //     else
+// //       val = sin16((i % groupSize) * SINETABLE_MAX_IN / groupSize);
 
-    //  scale intensity with number between 0-255
-    m_leds[ledIndex % m_state.settings().numLeds] %= val * MAX_COLOR / SINETABLE_MAX_OUT;
-  }
+// //     //  scale intensity with number between 0-255
+// //     m_leds[ledIndex % m_state.settings().numLeds] %= val * MAX_COLOR / SINETABLE_MAX_OUT;
+// //   }
   
-  // used rand to decideif we move at all and move forward and backwards 50% of the ttime
-  if (rand() % PROB_MAX < m_state.settings().eventProb)
-    m_state.pos() += rand() % 2 == 0 ? 1 : -1;
+// //   // used rand to decideif we move at all and move forward and backwards 50% of the ttime
+// //   if (rand() % PROB_MAX < m_state.settings().eventProb)
+// //     m_state.pos() += rand() % 2 == 0 ? 1 : -1;
 
-  FastLED.show();
-  FastLED.delay(FRAME_DELAY);
-  m_state.update();
-}
+// //   FastLED.show();
+// //   FastLED.delay(FRAME_DELAY);
+// //   m_state.update();
+// // }
 
-// pulse the whole strip at a dynamic frequency
-// uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb, groupSize
-void Pattern::pulse() {
-  CRGB rgb = m_palette.getColor(m_state.currColorIndex());
-  int16_t val = sin16(m_state.currColorIndex() % (SINETABLE_MAX_IN / 2)); // FIX: probably repeat faster than this
+// // pulse the whole strip at a dynamic frequency
+// // uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb, groupSize
+// // void Pattern::pulse() {
+// //   CRGB rgb = m_palette.getColor(m_state.currColorIndex());
+// //   int16_t val = sin16(m_state.currColorIndex() % (SINETABLE_MAX_IN / 2)); // FIX: probably repeat faster than this
 
-  for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
-    m_leds[i] = rgb;
-    m_leds[i] %= val * MAX_COLOR / SINETABLE_MAX_OUT;
-  }
+// //   for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
+// //     m_leds[i] = rgb;
+// //     m_leds[i] %= val * MAX_COLOR / SINETABLE_MAX_OUT;
+// //   }
 
-  FastLED.show();
-  FastLED.delay(FRAME_DELAY);
-  m_state.update();
-}
+// //   FastLED.show();
+// //   FastLED.delay(FRAME_DELAY);
+// //   m_state.update();
+// }
 

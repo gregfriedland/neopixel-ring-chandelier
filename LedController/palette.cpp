@@ -18,7 +18,7 @@ uint16_t interp16(uint16_t start, uint16_t end, uint16_t index, uint16_t length)
 }
 
 CRGB getGradientColor(palind_t palIndex, colind_t gradientIndex) {
-  gradientIndex = gradientIndex % PALETTE_SIZE;    
+  gradientIndex = ((gradientIndex % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE; // handle neg numbers
 
   uint8_t colIndex1 = gradientIndex / GRADIENT_SIZE;
   uint8_t colIndex2 = (colIndex1 + 1) % PALETTE_SIZE_BLOCKS;
