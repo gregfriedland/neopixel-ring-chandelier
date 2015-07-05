@@ -19,7 +19,7 @@ fout=open("gamma.h","wt")
 #adjust me! Each extra bit doubles the table size 
 ditherBits=3
 
-gamma = 2.8
+gamma = 4
 
 ditherMSB=1<<(ditherBits-1)
 
@@ -58,7 +58,7 @@ for dither in range(1<<ditherBits):
             # CIE 1931 
             brightness=n/2.56
             if brightness > 8:
-                pwmValue= pow( ((brightness + 16) / 116) , 3  )
+                pwmValue= pow( ((brightness + 16) / 116) , 5  ) # formerly pow(5)
             else:
                 pwmValue = brightness / 903.3      
             pwmValue*=256
