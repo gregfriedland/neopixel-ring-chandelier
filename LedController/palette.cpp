@@ -73,18 +73,29 @@ Palette::Palette(int palIndex, int palSize)
 CRGB Palette::getColor(colind_t colIndex) {
   static uint16_t ditherCycle = 0;
 
-#if USE_FASTLED_PALETTES == 1
-  colIndex %= PALETTE_SIZE;
-  colind_t colIndex2 = colIndex % (PALETTE_SIZE / NUM_COLORS_PER_PALETTE);
-  uint8_t rgbPaletteInd = colIndex / (PALETTE_SIZE / NUM_COLORS_PER_PALETTE);
-  p("colIndex2="); p(colIndex2); p(" rgbPalInd="); p(rgbPaletteInd); p("\n");
+// #if USE_FASTLED_PALETTES == 1
+//   colIndex %= PALETTE_SIZE;
+//   colind_t colIndex2 = colIndex % (PALETTE_SIZE / NUM_COLORS_PER_PALETTE);
+//   uint8_t rgbPaletteInd = colIndex / (PALETTE_SIZE / NUM_COLORS_PER_PALETTE);
+//   p("colIndex2="); p(colIndex2); p(" rgbPalInd="); p(rgbPaletteInd); p("\n");
 
-  CRGB rgb = ColorFromPalette(m_rgbPalette[rgbPaletteInd], colIndex2);
-  ditherCycle++;
-  return CRGB(gamma(rgb.r, ditherCycle), gamma(rgb.g, ditherCycle), gamma(rgb.b, ditherCycle));
-#else
-  CRGB col = getGradientColor(m_palIndex, colIndex);
-  col = CRGB(gamma(col.r, ditherCycle), gamma(col.g, ditherCycle), gamma(col.b, ditherCycle));
-  return col;
+//   CRGB rgb = ColorFromPalette(m_rgbPalette[rgbPaletteInd], colIndex2);
+//   ditherCycle++;
+//   rgb = CRGB(gamma(rgb.r, ditherCycle), gamma(rgb.g, ditherCycle), gamma(rgb.b, ditherCycle));
+
+// #else
+//  return rgb;
+// #endif
+
+  CRGB rgb = getGradientColor(m_palIndex, colIndex);
+  rgb = CRGB(gamma(rgb.r, ditherCycle), gamma(rgb.g, ditherCycle), gamma(rgb.b, ditherCycle));
+
+#if MIN_SATURATION > 0
+  CHSV hsv = rgb2hsv_approximate(rgb);
+  hsv.s = max(hsv.s, MIN_SATURATION);
+  hsv2rgb_rainbow(hsv, rgb);
 #endif
+
+  return rgb;
+//#endif
 }
