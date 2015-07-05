@@ -5,16 +5,11 @@
 #define MAX_COLOR 256
 
 void PatternState::update() {
-#if 1
   accel_t accel = (rand() % 2 == 0 ? 1 : -1) * m_currAcceleration;
   speed_t newSpeed = m_currSpeed * (MAX_ACCELERATION + accel) / MAX_ACCELERATION;
   newSpeed = max(min(newSpeed, m_settings.maxSpeed), -m_settings.maxSpeed);
   if (newSpeed > -m_settings.minSpeed && newSpeed < m_settings.minSpeed)
     newSpeed = newSpeed >= 0 ? -m_settings.minSpeed : m_settings.minSpeed;
-#else
-  // forward or backward
-  speed_t newSpeed = (inoise16(m_iter) - (1<<15)) / m_settings.maxSpeed; 
-#endif
 
   m_currSpeed = newSpeed;
   m_currColorIndex = (m_currColorIndex + m_settings.colIncrement) % PALETTE_SIZE;
@@ -104,14 +99,25 @@ void Pattern::sparkle() {
   };
   
   static Sparkle sparkles[NUM_LEDS];
-    
+
+  // use the speed to determine the probability of starting a sparkle
+  // if we've maxed that out, make the sparkles faster    
+  speed_t speed = abs(m_state.currSpeed()) / 10;
+  uint8_t eventProb = m_state.settings().eventProb; // min(255, speed);
+  uint8_t numSparkles = constrain(map(speed, 100, 1000, 1, NUM_LEDS), 1, NUM_LEDS);
+  uint8_t eventLength = m_state.settings().eventLength;
+  if (speed >= 500)
+    eventLength = map(speed, 500, 10000, eventLength, 3);
+
   // randomly start new sparkles
-  if (rand() % PROB_MAX < m_state.settings().eventProb) {
-    ledind_t sparkleIndex = rand() % m_state.settings().numLeds;
-    if (sparkles[sparkleIndex].val == 0) {
-      sparkles[sparkleIndex].rgb = m_palette.getColor(m_state.currColorIndex());
-      sparkles[sparkleIndex].direction = true;
-      sparkles[sparkleIndex].val = 1;
+  for (int i = 0; i < numSparkles; i++) {
+    if (random16() % PROB_MAX < eventProb) {
+    ledind_t sparkleIndex = random16() % m_state.settings().numLeds;
+      if (sparkles[sparkleIndex].val == 0) {
+        sparkles[sparkleIndex].rgb = m_palette.getColor(m_state.currColorIndex() * 5);
+        sparkles[sparkleIndex].direction = true;
+        sparkles[sparkleIndex].val = 1;
+      }
     }
   }
   
@@ -119,18 +125,19 @@ void Pattern::sparkle() {
     // set leds from sparkles
     if (sparkles[i].val > 0) {
       m_leds[i] = sparkles[i].rgb;
-      m_leds[i] %= sparkles[i].val * PROB_MAX / m_state.settings().eventLength;
+      m_leds[i] %= sparkles[i].val * 255 / eventLength;
     
       // adjust sparkles
       if (sparkles[i].direction) {
         sparkles[i].val++;
-        if (sparkles[i].val >= m_state.settings().eventLength) {
+        if (sparkles[i].val >= eventLength) {
           sparkles[i].direction = false;
         }
       } else {
         sparkles[i].val--;
       }
-    }
+    } else
+      m_leds[i] = CRGB::Black;
   }
   
   FastLED.show();

@@ -9,11 +9,11 @@ CRGB leds[NUM_LEDS];
 
 //PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, groupSize
 Pattern pattern(leds, Palette(random16(NUM_PALETTES), PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/20, 
-	PALETTE_SIZE / NUM_LEDS / 2, 0, 0, 16));
+	PALETTE_SIZE / NUM_LEDS / 2, 25, 25, 16));
 
 typedef enum { SPARKLE , GRADIENT, WAVE, PARTICLE, NUM_MODES } PatternMode;
 
-PatternMode patternMode = PARTICLE;
+PatternMode patternMode = SPARKLE;
 
 
 void setup() {
