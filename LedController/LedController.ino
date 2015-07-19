@@ -8,10 +8,10 @@
 CRGB leds[NUM_LEDS];
 
 //PatternSettings order: numLeds, initSpeed, maxSpeed, minSpeed, acceleration, colIncrement, eventProb, eventLength, groupSize
-Pattern pattern(leds, Palette(random16(NUM_PALETTES), PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/20, 
+Pattern pattern(leds, Palette(random16(NUM_PALETTES), PALETTE_SIZE), PatternSettings(NUM_LEDS, 200, 4000, 200, MAX_ACCELERATION/20, 
 	PALETTE_SIZE / NUM_LEDS / 2, 25, 25, 16));
 
-typedef enum { SPARKLE, GRADIENT, WAVE, PARTICLE, FIREWORKS, NUM_MODES } PatternMode;
+typedef enum { SPARKLE, GRADIENT, WAVE, PARTICLE, FIREWORKS, CONSISTENT, NUM_MODES } PatternMode;
 
 PatternMode patternMode = PARTICLE;
 
@@ -132,6 +132,9 @@ void loop() {
       break;
     case FIREWORKS:
       pattern.fireworks();
+      break;
+    case CONSISTENT:
+      pattern.consistent();
       break;
   }
 

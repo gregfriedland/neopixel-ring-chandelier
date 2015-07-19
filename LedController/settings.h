@@ -13,13 +13,13 @@ typedef uint8_t col_t;
 
 #define PROB_MAX 256
 #define MAX_ACCELERATION 256
-#define FPS 200
+#define FPS 300
 #define POS_PRECISION 1000
 #define FRAME_DELAY (1000 / FPS)
-#define MIN_SPEED 100
+#define MIN_SPEED 10
 #define MAX_SPEED 1e12
-#define START_BRIGHTNESS 0
-#define MIN_DIRECTION_SWITCH_TIME 3000
+#define START_BRIGHTNESS 32
+#define MIN_DIRECTION_SWITCH_TIME 7000
 #define IR_CMD_UP 0x9A
 #define IR_CMD_LEFT 0xA8
 #define IR_CMD_DOWN 0x07

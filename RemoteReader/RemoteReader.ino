@@ -3,7 +3,7 @@
 #include <IRremote.h>
 #include <Wire.h>
 
-int RECV_PIN = 9;
+int RECV_PIN = 2;
 
 IRrecv irrecv(RECV_PIN);
 
@@ -29,12 +29,18 @@ byte CRC8(const byte *data, byte len) {
 void setup()
 {
   Serial.begin(9600);
+  Serial.println("Setup");
+  pinMode(13, OUTPUT);
   irrecv.enableIRIn(); // Start the receiver
   Wire.begin(); // join i2c bus (address optional for master)  
 }
 
 void loop() {
   if (irrecv.decode(&results)) {
+    digitalWrite(13, HIGH);
+    delay(10);
+    digitalWrite(13, LOW);    
+
     Serial.println(results.value, HEX);
     
     // compress the key code into one byte

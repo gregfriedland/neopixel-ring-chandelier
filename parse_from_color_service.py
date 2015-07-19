@@ -5,6 +5,7 @@ import urllib2
 import pycurl
 import colorsys
 from io import BytesIO
+import time
 
 def parse_colour_lovers(data):
     import json
@@ -52,7 +53,7 @@ if __name__ == "__main__":
             print "Invalid service: " + service
             sys.exit(1)
 
-        print url
+        print >> sys.stderr, url
         buffer = BytesIO()
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, url)
@@ -77,6 +78,9 @@ if __name__ == "__main__":
             all_palettes += [(tot_sat, palette)]
             #print rgbs, " ".join(["%.2f" % hsv[1] for hsv in hsvs])
             #print ",".join(["0x%x"%col for col in cols])
+
+        # don't try to fetch them too fast
+        time.sleep(1)
 
     for tot_sat, palette in reversed(sorted(all_palettes)):
         if len(palette) == 5:

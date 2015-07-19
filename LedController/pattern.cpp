@@ -39,6 +39,7 @@ void PatternState::update() {
   }
 
   m_currSpeed = newSpeed;
+  m_pos = m_pos + m_currSpeed;
   m_currColorIndex = (m_currColorIndex + m_settings.colIncrement) % PALETTE_SIZE;
   m_iter++;
 //p("sp="); p(m_currSpeed); p(" col="); p(m_currColorIndex); p("\n");	  
@@ -67,8 +68,8 @@ void Pattern::gradient(bool isWave, bool singleWave) {
   ledind_t waveSize = m_state.settings().groupSize;
 
   for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
+    colind_t colIndex = m_state.pos() * m_state.settings().colIncrement / POS_PRECISION + i * m_state.settings().colIncrement;
     pos_t pos = m_state.pos() / POS_PRECISION + i;
-    colind_t colIndex = pos * m_state.settings().colIncrement;
     CRGB col = m_palette.getColor(colIndex);
     //p("i="); p(i); p(" ci="); p(colIndex); p(" c="); p(col, HEX); p("\n");
     m_leds[i] = col;
@@ -96,7 +97,6 @@ void Pattern::gradient(bool isWave, bool singleWave) {
   FastLED.show();
   FastLED.delay(FRAME_DELAY);
   m_state.update();
-  m_state.pos() = m_state.pos() + m_state.currSpeed();
   //p("speed="); p(m_state.currSpeed()); p(" pos="); p(m_state.pos()); p("\n");
 }
 
@@ -243,6 +243,21 @@ void Pattern::fireworks() {
   FastLED.show();
   FastLED.delay(FRAME_DELAY);
   m_state.update();  
+}
+
+
+void Pattern::consistent() {
+  ledind_t waveSize = m_state.settings().groupSize;
+
+  for (ledind_t i = 0; i < m_state.settings().numLeds; i++) {
+    colind_t colIndex = m_state.pos() / POS_PRECISION;
+    CRGB col = m_palette.getColor(colIndex);
+    m_leds[i] = col;
+  }
+  
+  FastLED.show();
+  FastLED.delay(FRAME_DELAY);
+  m_state.update();
 }
 
 // void Pattern::randomWalk() {

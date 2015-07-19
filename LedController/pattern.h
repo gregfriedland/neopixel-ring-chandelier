@@ -72,9 +72,11 @@ public:
   // uses: initSpeed, colIncrement, eventProb, eventLength, groupSize
   void sparkle();
 
+  // simulate fireworks
   void fireworks();
 
-//  void noise();
+  // all colors the same, changing together
+  void consistent();
     
   Palette& palette() { return m_palette; }
 
