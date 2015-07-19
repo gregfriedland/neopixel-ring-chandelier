@@ -11,9 +11,9 @@ CRGB leds[NUM_LEDS];
 Pattern pattern(leds, Palette(random16(NUM_PALETTES), PALETTE_SIZE), PatternSettings(NUM_LEDS, 500, 3000, 500, MAX_ACCELERATION/20, 
 	PALETTE_SIZE / NUM_LEDS / 2, 25, 25, 16));
 
-typedef enum { SPARKLE , GRADIENT, WAVE, PARTICLE, NUM_MODES } PatternMode;
+typedef enum { SPARKLE, GRADIENT, WAVE, PARTICLE, FIREWORKS, NUM_MODES } PatternMode;
 
-PatternMode patternMode = SPARKLE;
+PatternMode patternMode = PARTICLE;
 
 
 void setup() {
@@ -25,7 +25,7 @@ void setup() {
 
   delay(2000);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
-  FastLED.setBrightness(64);
+  FastLED.setBrightness(START_BRIGHTNESS);
   FastLED.setCorrection(TypicalSMD5050);
 
   Serial.println("Setup");
@@ -129,6 +129,9 @@ void loop() {
       break;
     case PARTICLE:
       pattern.particle();
+      break;
+    case FIREWORKS:
+      pattern.fireworks();
       break;
   }
 

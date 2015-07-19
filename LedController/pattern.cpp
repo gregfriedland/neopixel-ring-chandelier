@@ -1,15 +1,42 @@
 #include "pattern.h"
+#include <deque>
+
+namespace std {
+  void __throw_bad_alloc()
+  {
+    Serial.println("Unable to allocate memory");
+  }
+
+  // void __throw_length_error( char const*e )
+  // {
+  //   Serial.print("Length Error :");
+  //   Serial.println(e);
+  // }
+}
+
 
 // #define SINETABLE_MAX_IN ((1<<16)-1)
 // #define SINETABLE_MAX_OUT ((1<<15)-1)
 #define MAX_COLOR 256
 
+int mod(int num, int den) {
+  return ((num % den) + den) % den;
+}
+
 void PatternState::update() {
+  static uint32_t lastDirectionSwitch = 0;
+
   accel_t accel = (rand() % 2 == 0 ? 1 : -1) * m_currAcceleration;
   speed_t newSpeed = m_currSpeed * (MAX_ACCELERATION + accel) / MAX_ACCELERATION;
-  newSpeed = max(min(newSpeed, m_settings.maxSpeed), -m_settings.maxSpeed);
-  if (newSpeed > -m_settings.minSpeed && newSpeed < m_settings.minSpeed)
-    newSpeed = newSpeed >= 0 ? -m_settings.minSpeed : m_settings.minSpeed;
+  newSpeed = constrain(newSpeed, -m_settings.maxSpeed, m_settings.maxSpeed);
+  if (newSpeed > -m_settings.minSpeed && newSpeed < m_settings.minSpeed) {
+    int direction = newSpeed >= 0 ? 1 : -1;
+    if (millis() - lastDirectionSwitch >= MIN_DIRECTION_SWITCH_TIME) {
+      newSpeed = -direction * m_settings.minSpeed;
+      lastDirectionSwitch = millis();
+    } else
+      newSpeed = direction * m_settings.minSpeed;
+  }
 
   m_currSpeed = newSpeed;
   m_currColorIndex = (m_currColorIndex + m_settings.colIncrement) % PALETTE_SIZE;
@@ -48,7 +75,7 @@ void Pattern::gradient(bool isWave, bool singleWave) {
     
    if (isWave) {
      uint8_t waveVal;
-     ledind_t waveIndex = ((pos % NUM_LEDS) + NUM_LEDS) % NUM_LEDS; // handle neg numbers
+     ledind_t waveIndex = mod(pos, NUM_LEDS);
 
      // if (singleWave)
      //   waveIndex = waveIndex % NUM_LEDS;
@@ -143,6 +170,79 @@ void Pattern::sparkle() {
   FastLED.show();
   FastLED.delay(FRAME_DELAY);
   m_state.update();
+}
+
+void Pattern::fireworks() {
+  p("fireworks:\n");
+
+  struct Firework {
+    ledind_t startLed;
+    ledind_t radius;
+    event_t age, attack, decay;
+    CRGB startCol;
+  };
+
+  static std::deque<Firework> fireworks;
+
+  ledind_t maxRadius = 10;
+  speed_t speed = m_state.settings().maxSpeed / 3;
+  uint8_t eventProb = constrain(map(speed, 1000, 10000, 3, 150), 3, 150);
+  uint8_t eventLength = m_state.settings().eventLength;
+  eventLength = constrain(map(speed, 5000, 25000, eventLength, 5), 5, eventLength);
+
+  if (random16() % PROB_MAX < eventProb) {
+    Firework firework;
+    firework.startLed = random16() % m_state.settings().numLeds;
+    firework.radius = 1;
+    firework.age = 0;
+    firework.attack = eventLength;
+    firework.decay = eventLength * 2;
+    firework.startCol = m_palette.getColor(m_state.currColorIndex() * 5);
+
+    p("adding fw\n");
+    fireworks.push_back(firework);
+  }
+
+  // clear all
+  for (ledind_t i = 0; i < m_state.settings().numLeds; i++)
+    m_leds[i] = CRGB::Black;
+
+  // set leds from fireworks
+  for (Firework& firework: fireworks) {
+    p("updating fw\n");
+
+    // fill all leds based on current radius
+    for (ledind_t i = 0; i < firework.radius; i++) {
+      ledind_t led1 = mod(firework.startLed + i, m_state.settings().numLeds);
+      ledind_t led2 = mod(firework.startLed - i, m_state.settings().numLeds);
+      p("  led1/2="); p(led1); p(" "); p(led2); p("\n");
+      m_leds[led1] = firework.startCol;
+      m_leds[led2] = firework.startCol;
+
+      // decay if we've reached max size
+      if (firework.age >= firework.attack) {
+        p("  decaying fw\n");
+        m_leds[led1] %= 255 - (firework.age - firework.attack) * 255 / firework.decay;
+        m_leds[led2] %= 255 - (firework.age - firework.attack) * 255 / firework.decay;
+      }
+    }
+
+    // grow the firework
+    firework.radius = constrain(map(firework.age, 0, firework.attack, 1, maxRadius), 1, maxRadius);
+    //p("growing fw:"); p(firework.radius); p("\n");
+
+    firework.age++;
+  }
+
+  // remove fireworks that have expired
+  while (fireworks.size() > 0 && fireworks.begin()->age >= fireworks.begin()->attack + fireworks.begin()->decay) {
+    p("removing fw\n");
+    fireworks.pop_front();
+  }
+
+  FastLED.show();
+  FastLED.delay(FRAME_DELAY);
+  m_state.update();  
 }
 
 // void Pattern::randomWalk() {

@@ -72,11 +72,9 @@ public:
   // uses: initSpeed, colIncrement, eventProb, eventLength, groupSize
   void sparkle();
 
-  // randomly jitter back and forth around the circle
-  // uses: initSpeed, maxSpeed, acceleration, colIncrement, eventProb, groupSize
-  void randomWalk();
+  void fireworks();
 
-  void noise();
+//  void noise();
     
   Palette& palette() { return m_palette; }
 

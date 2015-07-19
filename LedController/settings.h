@@ -18,7 +18,8 @@ typedef uint8_t col_t;
 #define FRAME_DELAY (1000 / FPS)
 #define MIN_SPEED 100
 #define MAX_SPEED 1e12
-
+#define START_BRIGHTNESS 0
+#define MIN_DIRECTION_SWITCH_TIME 3000
 #define IR_CMD_UP 0x9A
 #define IR_CMD_LEFT 0xA8
 #define IR_CMD_DOWN 0x07
@@ -47,6 +48,6 @@ typedef uint8_t col_t;
 #define NUM_LEDS 60
 #define DATA_PIN 10
 
-#define p(...) Serial.print(__VA_ARGS__)
+#define p(...) //Serial.print(__VA_ARGS__)
 
 #endif
